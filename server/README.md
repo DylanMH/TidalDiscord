@@ -105,11 +105,3 @@ into the image or repository.
 Normal logs record status, latency, and cache hit/miss only — not track
 metadata. Track titles are logged only at `Debug` level when
 `ASPNETCORE_ENVIRONMENT=Development`.
-
-## ⚠ Review before broad public distribution
-
-Serving metadata to many end users through a single developer application
-may be subject to TIDAL Developer/API terms covering rate limits, caching,
-redistribution, and branding. Review the current TIDAL developer terms
-before widely distributing the desktop app against this backend — this is
-a flag for human review, not a legal conclusion.
