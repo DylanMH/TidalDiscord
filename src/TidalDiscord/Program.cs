@@ -176,10 +176,13 @@ bool presenceActive = false;
 bool lastPausedSent = false;
 bool wasDiscordConnected = false;
 
-// Metadata lookup is retried with backoff on failure so a
-// flaky backend doesn't leave a song without artwork, but
-// also doesn't get hammered every second.
+// Metadata lookup runs on a background task and is retried
+// with backoff on failure. This keeps presence updates
+// instant even while a sleeping backend (e.g. a free-tier
+// host) takes a minute to wake.
 DateTime nextLookupAttempt = DateTime.MinValue;
+Task<TidalTrackInfo?>? pendingLookup = null;
+string? pendingLookupKey = null;
 
 int lastSettingsVersion = SettingsService.Version;
 
@@ -274,31 +277,60 @@ while (true)
             lastTrackKey = trackKey;
         }
 
-        if (metadataProvider != null &&
-            DateTime.UtcNow >= nextLookupAttempt)
+        bool metadataUpdated = false;
+
+        // Collect a finished background lookup. Results for a
+        // track that has since changed are discarded.
+        if (pendingLookup is { IsCompleted: true })
         {
+            bool stillCurrent =
+                pendingLookupKey == trackKey;
+
             try
             {
-                var info =
-                    await metadataProvider.ResolveAsync(
-                        snapshot.Title,
-                        snapshot.Artist,
-                        snapshot.Album);
+                var info = pendingLookup.Result;
 
-                artworkUrl = info?.ArtworkUrl;
-                trackUrl = info?.TrackUrl;
+                if (stillCurrent)
+                {
+                    artworkUrl = info?.ArtworkUrl;
+                    trackUrl = info?.TrackUrl;
 
-                nextLookupAttempt = DateTime.MaxValue;
+                    metadataUpdated = true;
+                    nextLookupAttempt = DateTime.MaxValue;
+                }
             }
             catch (Exception ex)
             {
                 Logger.Warn(
                     $"Track metadata lookup failed. " +
-                    $"{ex.Message}");
+                    $"{ex.InnerException?.Message ?? ex.Message}");
 
-                nextLookupAttempt =
-                    DateTime.UtcNow.AddSeconds(15);
+                // A stale failure for an old track must not
+                // delay the current track's lookup.
+                if (stillCurrent)
+                {
+                    nextLookupAttempt =
+                        DateTime.UtcNow.AddSeconds(15);
+                }
             }
+            finally
+            {
+                pendingLookup = null;
+                pendingLookupKey = null;
+            }
+        }
+
+        if (metadataProvider != null &&
+            pendingLookup == null &&
+            DateTime.UtcNow >= nextLookupAttempt)
+        {
+            pendingLookupKey = trackKey;
+
+            pendingLookup =
+                metadataProvider.ResolveAsync(
+                    snapshot.Title,
+                    snapshot.Artist,
+                    snapshot.Album);
         }
 
 
@@ -353,6 +385,7 @@ while (true)
 
         if (!presenceActive ||
             trackChanged ||
+            metadataUpdated ||
             seekDetected ||
             pausedChanged ||
             discordReconnected ||

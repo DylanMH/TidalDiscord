@@ -109,13 +109,17 @@ See [server/README.md](server/README.md) and `server/.env.example`.
 
 - Reads the currently playing track from the Windows media session API
   (local only).
-- To resolve album art and the exact track link, the app sends the current
-  track title/artist to the metadata proxy (or directly to TIDAL in
-  developer mode). Nothing else is sent — no accounts, no history, no
-  analytics, no telemetry.
-- The backend sees only the lookup request and caches results briefly; it
-  does not store listening history.
-- Credentials never leave your machine (they stay in .NET User Secrets).
+- The public build contains no TIDAL credentials, and users never provide
+  TIDAL or Discord credentials — no accounts or logins are involved.
+- To resolve album art and the exact track link, the app sends only the
+  current track's title, artist, and optional album to the hosted
+  metadata service (or directly to TIDAL in optional developer mode).
+  Nothing else is sent — no history, no analytics, no telemetry.
+- The hosted service holds the project's TIDAL API credentials
+  server-side, sees only individual lookup requests, caches results
+  briefly, and does not store listening history.
+- Optional developer-mode credentials (User Secrets) never leave the
+  developer's machine and are not needed to run the app.
 
 ## Architecture
 
@@ -130,8 +134,14 @@ See [server/README.md](server/README.md) and `server/.env.example`.
 
 ## Public backend status
 
-The metadata proxy lives in `server/`. See
-[PUBLIC_RELEASE_PLAN.md](PUBLIC_RELEASE_PLAN.md) for the design and
+The metadata proxy lives in `server/` and a hosted instance is deployed
+on Render (`https://tidaldiscord.onrender.com`). On the free instance
+type the service may sleep while idle; the desktop app handles the
+resulting cold start transparently — it shows the track immediately with
+a static image, then swaps in artwork and the track link once the
+backend responds.
+
+See [PUBLIC_RELEASE_PLAN.md](PUBLIC_RELEASE_PLAN.md) for the design and
 remaining distribution considerations (including TIDAL developer-terms
 items that need review before broad distribution).
 

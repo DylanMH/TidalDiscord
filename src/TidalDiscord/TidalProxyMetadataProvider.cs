@@ -21,7 +21,11 @@ public class TidalProxyMetadataProvider : ITrackMetadataProvider
             http ??
             new HttpClient
             {
-                Timeout = TimeSpan.FromSeconds(8)
+                // Generous timeout: the hosted backend may be a
+                // free-tier instance that needs up to ~60s to
+                // wake from idle. Lookups run on a background
+                // task, so this never blocks presence updates.
+                Timeout = TimeSpan.FromSeconds(60)
             };
     }
 
