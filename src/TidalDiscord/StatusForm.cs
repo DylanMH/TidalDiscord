@@ -12,6 +12,7 @@ public class StatusForm : Form
     private readonly Label _artistLabel;
     private readonly Label _albumLabel;
     private readonly Label _positionLabel;
+    private readonly ProgressTrackBar _progressBar;
     private readonly PictureBox _artworkBox;
     private string? _lastArtworkUrl;
 
@@ -62,17 +63,23 @@ public class StatusForm : Form
         _positionLabel = new Label
         {
             AutoEllipsis = true,
-            Location = new Point(116, 260),
+            Location = new Point(116, 258),
             Size = new Size(268, 20),
             ForeColor = Color.DimGray
         };
 
-        var divider2 = MakeDivider(280);
+        _progressBar = new ProgressTrackBar
+        {
+            Location = new Point(116, 279),
+            Size = new Size(268, 14)
+        };
+
+        var divider2 = MakeDivider(302);
 
         var settingsHeading =
-            MakeHeading("Settings", 10, 16, 292);
+            MakeHeading("Settings", 10, 16, 314);
 
-        int checkY = 320;
+        int checkY = 342;
 
         MakeCheck(
             "Enable Discord presence",
@@ -110,10 +117,10 @@ public class StatusForm : Form
             ref checkY);
 
         MakeCheck(
-            "Show \"Listen on TIDAL\" button",
-            s => s.ShowTidalButton,
+            "Show \"Listen\" buttons",
+            s => s.ShowListenButtons,
             v => SettingsService.Update(
-                s => s.ShowTidalButton = v),
+                s => s.ShowListenButtons = v),
             ref checkY);
 
         MakeCheck(
@@ -171,6 +178,7 @@ public class StatusForm : Form
             _artistLabel,
             _albumLabel,
             _positionLabel,
+            _progressBar,
             divider2,
             settingsHeading,
             divider3,
@@ -365,6 +373,11 @@ public class StatusForm : Form
                   (status.IsPlaying ? "" : "  (Paused)")
                 : "";
 
+        _progressBar.SetProgress(
+            status.Position,
+            status.Duration,
+            !status.IsPlaying);
+
         if (status.ArtworkUrl != _lastArtworkUrl)
         {
             _lastArtworkUrl = status.ArtworkUrl;
@@ -395,70 +408,84 @@ public class StatusForm : Form
 
     private static void OpenTidal()
     {
-        try
+        _ = TryLaunch(new ProcessStartInfo
         {
-            Process.Start(
-                new ProcessStartInfo
-                {
-                    FileName = "explorer.exe",
-                    Arguments =
-                        @"shell:AppsFolder\com.squirrel.TIDAL.TIDAL",
-                    UseShellExecute = true
-                });
-        }
-        catch
-        {
-            try
+            FileName = "explorer.exe",
+            Arguments =
+                @"shell:AppsFolder\com.squirrel.TIDAL.TIDAL",
+            UseShellExecute = true
+        })
+        || TryLaunch(
+            new ProcessStartInfo("tidal://")
             {
-                Process.Start(
-                    new ProcessStartInfo("tidal://")
-                    {
-                        UseShellExecute = true
-                    });
-            }
-            catch (Exception ex)
-            {
-                Logger.Warn(
-                    $"Could not open TIDAL. {ex.Message}");
-            }
-        }
+                UseShellExecute = true
+            })
+        || TryLaunchUrl("https://tidal.com")
+        || LogLaunchFailure("TIDAL");
     }
 
     private static void OpenDiscord()
     {
+        var localAppData =
+            Environment.GetFolderPath(
+                Environment.SpecialFolder.LocalApplicationData);
+
+        var updateExe =
+            Path.Combine(localAppData, @"Discord\Update.exe");
+
+        _ = TryLaunch(
+            new ProcessStartInfo("discord://")
+            {
+                UseShellExecute = true
+            })
+        || TryLaunch(new ProcessStartInfo
+        {
+            FileName = "explorer.exe",
+            Arguments =
+                @"shell:AppsFolder\com.squirrel.Discord.Discord",
+            UseShellExecute = true
+        })
+        || (File.Exists(updateExe) &&
+            TryLaunch(new ProcessStartInfo
+            {
+                FileName = updateExe,
+                Arguments = "--processStart Discord.exe",
+                UseShellExecute = true
+            }))
+        || TryLaunchUrl("https://discord.com/app")
+        || LogLaunchFailure("Discord");
+    }
+
+    private static bool TryLaunch(ProcessStartInfo info)
+    {
         try
         {
-            Process.Start(
-                new ProcessStartInfo("discord://")
-                {
-                    UseShellExecute = true
-                });
+            // With UseShellExecute=true, Process.Start returns
+            // null even on success (no handle). An unregistered
+            // protocol or missing file throws instead.
+            Process.Start(info);
+            return true;
         }
-        catch
+        catch (Exception ex)
         {
-            try
-            {
-                var updater =
-                    Path.Combine(
-                        Environment.GetFolderPath(
-                            Environment.SpecialFolder
-                                .LocalApplicationData),
-                        @"Discord\Update.exe");
-
-                Process.Start(
-                    new ProcessStartInfo
-                    {
-                        FileName = updater,
-                        Arguments = "--processStart Discord.exe",
-                        UseShellExecute = true
-                    });
-            }
-            catch (Exception ex)
-            {
-                Logger.Warn(
-                    $"Could not open Discord. {ex.Message}");
-            }
+            Logger.Warn(
+                $"Launch attempt failed ({info.FileName}). " +
+                $"{ex.Message}");
+            return false;
         }
+    }
+
+    private static bool TryLaunchUrl(string url) =>
+        TryLaunch(
+            new ProcessStartInfo(url)
+            {
+                UseShellExecute = true
+            });
+
+    private static bool LogLaunchFailure(string app)
+    {
+        Logger.Warn($"Could not launch {app}.");
+        return false;
     }
 
 

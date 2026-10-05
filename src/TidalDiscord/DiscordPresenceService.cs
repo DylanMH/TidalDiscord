@@ -163,17 +163,7 @@ public class DiscordPresenceService : IDisposable
             Assets = assets,
 
             Buttons =
-                settings.ShowTidalButton &&
-                !string.IsNullOrWhiteSpace(info.TrackUrl)
-                    ? new[]
-                    {
-                        new DiscordRPC.Button
-                        {
-                            Label = "Listen on TIDAL",
-                            Url = info.TrackUrl
-                        }
-                    }
-                    : null
+                BuildButtons(info, settings)
         };
 
         try
@@ -232,6 +222,47 @@ public class DiscordPresenceService : IDisposable
 
         _connected = false;
         AppStatus.SetDiscordConnected(false);
+    }
+
+    // Discord allows at most two buttons. TIDAL first (exact
+    // track link when resolved), then Spotify search.
+    private static DiscordRPC.Button[]? BuildButtons(
+        NowPlayingInfo info,
+        AppSettings settings)
+    {
+        if (!settings.ShowListenButtons)
+        {
+            return null;
+        }
+
+        var buttons = new List<DiscordRPC.Button>(2);
+
+        if (!string.IsNullOrWhiteSpace(info.TrackUrl))
+        {
+            buttons.Add(
+                new DiscordRPC.Button
+                {
+                    Label = "Listen on TIDAL",
+                    Url = info.TrackUrl
+                });
+        }
+
+        var spotifyUrl =
+            SpotifyLinkBuilder.BuildSearchUrl(
+                info.Title,
+                info.Artist);
+
+        if (spotifyUrl != null && buttons.Count < 2)
+        {
+            buttons.Add(
+                new DiscordRPC.Button
+                {
+                    Label = "Listen on Spotify",
+                    Url = spotifyUrl
+                });
+        }
+
+        return buttons.Count > 0 ? buttons.ToArray() : null;
     }
 
     private static string Limit(string text, int maxLength) =>
