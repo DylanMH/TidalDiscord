@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: windows-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.x"
+
+      - name: Restore
+        run: dotnet restore TidalDiscord.slnx
+
+      - name: Build desktop (Release)
+        run: >
+          dotnet build src/TidalDiscord/TidalDiscord.csproj
+          -c Release --no-restore
+
+      - name: Build server (Release)
+        run: >
+          dotnet build server/TidalDiscord.Api/TidalDiscord.Api.csproj
+          -c Release --no-restore
+
+      - name: Test
+        run: >
+          dotnet test tests/TidalDiscord.Api.Tests/TidalDiscord.Api.Tests.csproj
+          -c Release --no-restore
+
+      # NOTE: no TIDAL credentials are required for compilation
+      # or tests. Never put real secrets in this file — use GitHub
+      # Actions secrets if an integration test ever needs them.

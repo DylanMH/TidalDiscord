@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/server/">
+    <Project Path="server/TidalDiscord.Api/TidalDiscord.Api.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/TidalDiscord/TidalDiscord.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/TidalDiscord.Api.Tests/TidalDiscord.Api.Tests.csproj" />
+  </Folder>
+</Solution>
