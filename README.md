@@ -141,7 +141,7 @@ resulting cold start transparently — it shows the track immediately with
 a static image, then swaps in artwork and the track link once the
 backend responds.
 
-See [PUBLIC_RELEASE_PLAN.md](PUBLIC_RELEASE_PLAN.md) for the design and
+See [server/README.md](server/README.md) for the backend design and
 remaining distribution considerations (including TIDAL developer-terms
 items that need review before broad distribution).
 
