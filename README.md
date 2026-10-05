@@ -2,9 +2,10 @@
 
 A lightweight Windows tray app that shows the currently playing TIDAL track as Discord Rich Presence.
 
-<!-- screenshot placeholder -->
+<!-- screenshot placeholders -->
 <!-- ![Status window](docs/screenshot-status.png) -->
 <!-- ![Discord presence](docs/screenshot-presence.png) -->
+<!-- ![Tray menu](docs/screenshot-tray.png) -->
 
 > TidalDiscord is an independent community project and is not affiliated
 > with or endorsed by TIDAL or Discord. "TIDAL" and "Discord" are
@@ -22,11 +23,13 @@ open.
 
 - Shows your currently playing TIDAL track in Discord as a *Listening* activity
 - Dynamic album artwork as the large image
-- "Listen on TIDAL" button linking to the exact track
+- "Listen on TIDAL" button linking to the exact track, plus a
+  "Listen on Spotify" search link
 - Elapsed-time indicator that survives seeks
 - Optionally hides presence while paused
 - Runs in the system tray — no console window
-- Status window with live connection state, now-playing info, and settings
+- Status window with live connection state, now-playing info,
+  playback progress bar, and settings
 - Launch with Windows support
 - Single-instance (relaunching just opens the status window)
 
@@ -52,7 +55,7 @@ Settings persist to `%AppData%\TidalDiscord\settings.json`:
 | Show album name | On |
 | Show elapsed time | On |
 | Show album artwork | On |
-| Show "Listen on TIDAL" button | On |
+| Show "Listen" buttons | On |
 
 Logs are written to `%AppData%\TidalDiscord\logs\` and kept for 7 days.
 
@@ -130,6 +133,15 @@ See [server/README.md](server/README.md) and `server/.env.example`.
 
 ## Architecture
 
+```text
+TIDAL Desktop
+  -> Windows Media Session API
+    -> TidalDiscord (this app)
+      -> TidalDiscord metadata API (hosted, tidaldiscord.onrender.com)
+        -> TIDAL public metadata
+      -> Discord Rich Presence (local IPC)
+```
+
 - `TidalMediaService` reads playback state from the Windows
   `GlobalSystemMediaTransportControls` API.
 - `DiscordPresenceService` talks to the local Discord IPC/RPC pipe.
@@ -138,6 +150,9 @@ See [server/README.md](server/README.md) and `server/.env.example`.
   (developer mode).
 - The backend performs TIDAL `client_credentials` OAuth server-side so the
   client secret never ships in the desktop binary.
+- The backend receives only the song title, artist, and optional album.
+  It never receives TIDAL or Discord logins, tokens, playlists, library,
+  or account information.
 
 ## Public backend status
 
