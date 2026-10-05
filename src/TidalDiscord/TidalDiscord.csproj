@@ -12,6 +12,8 @@
     <AssemblyTitle>TidalDiscord</AssemblyTitle>
     <Product>TidalDiscord</Product>
     <Description>Displays your current TIDAL track as Discord Rich Presence.</Description>
+    <PackageLicenseExpression>GPL-3.0-only</PackageLicenseExpression>
+    <Copyright>Copyright (C) 2026 DylanMH</Copyright>
 
     <ApplicationIcon Condition="Exists('Assets\TidalDiscord.ico')">Assets\TidalDiscord.ico</ApplicationIcon>
   </PropertyGroup>

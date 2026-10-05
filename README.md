@@ -7,7 +7,8 @@ A lightweight Windows tray app that shows the currently playing TIDAL track as D
 <!-- ![Discord presence](docs/screenshot-presence.png) -->
 
 > TidalDiscord is an independent community project and is not affiliated
-> with or endorsed by TIDAL or Discord.
+> with or endorsed by TIDAL or Discord. "TIDAL" and "Discord" are
+> trademarks of their respective owners.
 
 ## Download
 
@@ -153,6 +154,9 @@ items that need review before broad distribution).
 
 ## License
 
-No license selected yet — all rights reserved for now.
+[GPL-3.0](LICENSE) — free to use, modify, and share, but every
+distributed copy or derivative must remain open-source under the same
+license. Copyright (C) 2026 DylanMH.
 
-<!-- TODO: choose a license before public distribution -->
+This software is provided "as is", without warranty of any kind. See the
+LICENSE file for the full text.
