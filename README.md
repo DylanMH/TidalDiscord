@@ -44,7 +44,7 @@ open.
 Settings persist to `%AppData%\TidalDiscord\settings.json`:
 
 | Setting | Default |
-|---|---|
+| --- | --- |
 | Enable Discord presence | On |
 | Launch with Windows | Off |
 | Hide presence while paused | On |
@@ -57,7 +57,7 @@ Logs are written to `%AppData%\TidalDiscord\logs\` and kept for 7 days.
 
 ## Repository layout
 
-```
+```text
 src/TidalDiscord/        Windows tray app (WinForms, .NET 10)
 server/TidalDiscord.Api/ Metadata proxy backend (ASP.NET Core)
 tests/                   Backend tests
@@ -70,7 +70,7 @@ tests/                   Backend tests
 3. (Optional — developer/direct-API mode only) configure TIDAL API
    credentials via .NET User Secrets:
 
-   ```
+   ```powershell
    cd src/TidalDiscord
    dotnet user-secrets set "Tidal:ClientId" "<your client id>"
    dotnet user-secrets set "Tidal:ClientSecret" "<your client secret>"
@@ -87,14 +87,14 @@ tests/                   Backend tests
 
 4. Build and run:
 
-   ```
+   ```powershell
    dotnet build src/TidalDiscord
    dotnet run --project src/TidalDiscord
    ```
 
 ## Publishing the desktop app
 
-```
+```powershell
 src\TidalDiscord\publish.ps1
 ```
 
@@ -103,7 +103,7 @@ Produces a self-contained single-file `TidalDiscord.exe` (win-x64) in
 
 ## Running the backend locally
 
-```
+```bat
 set TIDAL_CLIENT_ID=<your client id>
 set TIDAL_CLIENT_SECRET=<your client secret>
 dotnet run --project server/TidalDiscord.Api

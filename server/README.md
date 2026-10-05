@@ -33,7 +33,7 @@ searches TIDAL, and returns just `{ trackId, trackUrl, artworkUrl, ... }`.
 ```
 
 | Code | Meaning |
-|---|---|
+| --- | --- |
 | 200 | resolved |
 | 400 | malformed request (missing/oversized fields) |
 | 404 | no reasonable match |
@@ -46,7 +46,7 @@ Tokens, client IDs/secrets, and raw TIDAL payloads are never returned.
 ## Configuration (environment variables only)
 
 | Variable | Required | Purpose |
-|---|---|---|
+| --- | --- | --- |
 | `TIDAL_CLIENT_ID` | yes | TIDAL developer app client id |
 | `TIDAL_CLIENT_SECRET` | yes | TIDAL developer app secret — **server-side only** |
 | `ASPNETCORE_ENVIRONMENT` | no | `Development` enables verbose request logging |
@@ -59,7 +59,7 @@ Tokens, client IDs/secrets, and raw TIDAL payloads are never returned.
 
 ## Local development
 
-```
+```bat
 set TIDAL_CLIENT_ID=<id>
 set TIDAL_CLIENT_SECRET=<secret>
 dotnet run --project server/TidalDiscord.Api
@@ -68,7 +68,7 @@ dotnet run --project server/TidalDiscord.Api
 
 Then:
 
-```
+```bash
 curl http://localhost:<port>/health
 curl -X POST http://localhost:<port>/v1/resolve \
      -H "Content-Type: application/json" \
@@ -90,7 +90,7 @@ tooling auto-loads dotenv files (the API itself reads real env vars).
 
 `server/Dockerfile` produces a self-contained image:
 
-```
+```bash
 docker build -t tidaldiscord-api server/
 docker run -p 8080:8080 \
   -e TIDAL_CLIENT_ID=... -e TIDAL_CLIENT_SECRET=... \
