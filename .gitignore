@@ -1,0 +1,38 @@
+# Build output
+bin/
+obj/
+publish/
+artifacts/
+out/
+
+# Logs and runtime data
+logs/
+*.log
+
+# Environment files — only the example template is committed
+.env
+.env.*
+!.env.example
+
+# Configuration containing secrets / local-only settings
+appsettings.Development.json
+appsettings.Local.json
+secrets.json
+**/secrets.json
+
+# Temporary/debug artifacts
+tidal-search-debug.json
+*debug*.json
+icon-preview.png
+*.tmp
+
+# IDE
+.vs/
+.idea/
+.vscode/
+*.user
+*.suo
+
+# OS
+Thumbs.db
+Desktop.ini

@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net10.0-windows10.0.19041.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UseWindowsForms>true</UseWindowsForms>
+    <UserSecretsId>8465d774-d37a-4d76-a9b0-e05f54b9ddf8</UserSecretsId>
+
+    <Version>1.0.0</Version>
+    <AssemblyTitle>TidalDiscord</AssemblyTitle>
+    <Product>TidalDiscord</Product>
+    <Description>Displays your current TIDAL track as Discord Rich Presence.</Description>
+
+    <ApplicationIcon Condition="Exists('Assets\TidalDiscord.ico')">Assets\TidalDiscord.ico</ApplicationIcon>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource
+        Condition="Exists('Assets\TidalDiscord.ico')"
+        Include="Assets\TidalDiscord.ico"
+        LogicalName="TidalDiscord.ico" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DiscordRichPresence" Version="1.6.1.70" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.UserSecrets" Version="10.0.12" />
+  </ItemGroup>
+
+</Project>
