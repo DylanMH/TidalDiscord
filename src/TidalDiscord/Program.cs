@@ -398,6 +398,8 @@ while (true)
                     Artist = snapshot.Artist,
                     Album = snapshot.Album,
                     StartUtc = discordStart,
+                    EndUtc =
+                        discordStart + snapshot.EndTime,
                     ArtworkUrl = artworkUrl,
                     TrackUrl = trackUrl
                 },

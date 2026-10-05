@@ -7,6 +7,7 @@ public class NowPlayingInfo
     public string Album { get; set; } = "";
 
     public DateTime? StartUtc { get; set; }
+    public DateTime? EndUtc { get; set; }
 
     public string? ArtworkUrl { get; set; }
     public string? TrackUrl { get; set; }
@@ -150,15 +151,25 @@ public class DiscordPresenceService : IDisposable
             Details = Limit(info.Title, 128),
             State = Limit(state, 128),
 
+            // Sending both start AND end makes Discord render a
+            // native progress bar on Listening-type activities
+            // instead of plain elapsed-time text. Start alone is
+            // the fallback when duration is unknown.
             Timestamps =
-                settings.ShowElapsedTime &&
-                !paused &&
-                info.StartUtc.HasValue
-                    ? new Timestamps
-                    {
-                        Start = info.StartUtc.Value
-                    }
-                    : null,
+                !settings.ShowElapsedTime ||
+                paused ||
+                !info.StartUtc.HasValue
+                    ? null
+                    : info.EndUtc > info.StartUtc
+                        ? new Timestamps
+                        {
+                            Start = info.StartUtc.Value,
+                            End = info.EndUtc.Value
+                        }
+                        : new Timestamps
+                        {
+                            Start = info.StartUtc.Value
+                        },
 
             Assets = assets,
 
