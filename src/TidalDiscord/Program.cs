@@ -78,15 +78,17 @@ StartupManager.Apply(settings.LaunchWithWindows);
 
 
 // -------------------------------------------------------
-// TIDAL API credentials (optional)
+// Track metadata provider
 //
-// The app still shows basic Windows media metadata on
-// Discord without them; artwork and track links are just
-// unavailable. Secrets are stored in .NET User Secrets,
-// never in the repo or the published binary.
+// Public/default mode: the hosted proxy resolves artwork and
+// track links — no credentials needed on this machine.
+//
+// Developer mode: set "Tidal:UseDirectApi" = "true" plus
+// Tidal:ClientId / Tidal:ClientSecret in User Secrets to call
+// the TIDAL API directly (useful for debugging the matching).
 // -------------------------------------------------------
 
-TidalApiService? tidalApi = null;
+ITrackMetadataProvider? metadataProvider = null;
 
 try
 {
@@ -97,26 +99,55 @@ try
                 optional: true)
             .Build();
 
+    bool useDirect =
+        string.Equals(
+            config["Tidal:UseDirectApi"],
+            "true",
+            StringComparison.OrdinalIgnoreCase);
+
     var clientId = config["Tidal:ClientId"];
     var clientSecret = config["Tidal:ClientSecret"];
 
-    if (!string.IsNullOrWhiteSpace(clientId) &&
+    if (useDirect &&
+        !string.IsNullOrWhiteSpace(clientId) &&
         !string.IsNullOrWhiteSpace(clientSecret))
     {
-        tidalApi =
-            new TidalApiService(clientId, clientSecret);
+        metadataProvider =
+            new TidalDirectMetadataProvider(
+                new TidalApiService(
+                    clientId,
+                    clientSecret));
+
+        Logger.Info(
+            "Using direct TIDAL API metadata provider.");
     }
     else
     {
-        Logger.Warn(
-            "TIDAL API credentials not configured. " +
-            "Artwork and track links will be unavailable.");
+        if (useDirect)
+        {
+            Logger.Warn(
+                "Tidal:UseDirectApi is set but TIDAL " +
+                "credentials are missing; falling back " +
+                "to the proxy provider.");
+        }
+
+        metadataProvider =
+            new TidalProxyMetadataProvider(
+                AppConstants.MetadataApiBaseUrl);
+
+        Logger.Info(
+            $"Using proxy metadata provider " +
+            $"({AppConstants.MetadataApiBaseUrl}).");
     }
+
+    metadataProvider =
+        new CachingMetadataProvider(metadataProvider);
 }
 catch (Exception ex)
 {
     Logger.Warn(
-        $"Could not load TIDAL credentials. {ex.Message}");
+        $"Could not initialize metadata provider. " +
+        $"{ex.Message}");
 }
 
 
@@ -144,6 +175,11 @@ string? trackUrl = null;
 bool presenceActive = false;
 bool lastPausedSent = false;
 bool wasDiscordConnected = false;
+
+// Metadata lookup is retried with backoff on failure so a
+// flaky backend doesn't leave a song without artwork, but
+// also doesn't get hammered every second.
+DateTime nextLookupAttempt = DateTime.MinValue;
 
 int lastSettingsVersion = SettingsService.Version;
 
@@ -226,35 +262,43 @@ while (true)
 
 
         // -----------------------------------------------
-        // TIDAL API lookup on track change only
+        // Metadata lookup: on track change, retried with
+        // backoff after failures
         // -----------------------------------------------
 
         if (trackChanged)
         {
             artworkUrl = null;
             trackUrl = null;
-
-            if (tidalApi != null)
-            {
-                try
-                {
-                    var info =
-                        await tidalApi.GetTrackInfoAsync(
-                            snapshot.Title,
-                            snapshot.Artist);
-
-                    artworkUrl = info?.ArtworkUrl;
-                    trackUrl = info?.TrackUrl;
-                }
-                catch (Exception ex)
-                {
-                    Logger.Warn(
-                        $"TIDAL track lookup failed. " +
-                        $"{ex.Message}");
-                }
-            }
-
+            nextLookupAttempt = DateTime.UtcNow;
             lastTrackKey = trackKey;
+        }
+
+        if (metadataProvider != null &&
+            DateTime.UtcNow >= nextLookupAttempt)
+        {
+            try
+            {
+                var info =
+                    await metadataProvider.ResolveAsync(
+                        snapshot.Title,
+                        snapshot.Artist,
+                        snapshot.Album);
+
+                artworkUrl = info?.ArtworkUrl;
+                trackUrl = info?.TrackUrl;
+
+                nextLookupAttempt = DateTime.MaxValue;
+            }
+            catch (Exception ex)
+            {
+                Logger.Warn(
+                    $"Track metadata lookup failed. " +
+                    $"{ex.Message}");
+
+                nextLookupAttempt =
+                    DateTime.UtcNow.AddSeconds(15);
+            }
         }
 
 
