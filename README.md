@@ -9,6 +9,14 @@ A lightweight Windows tray app that shows the currently playing TIDAL track as D
 > TidalDiscord is an independent community project and is not affiliated
 > with or endorsed by TIDAL or Discord.
 
+## Download
+
+Grab the latest `TidalDiscord.zip` from
+[Releases](https://github.com/DylanMH/TidalDiscord/releases), extract it,
+and run `TidalDiscord.exe`. No installer, no accounts, no API keys — the
+app lives in your system tray and works as soon as Discord and TIDAL are
+open.
+
 ## Features
 
 - Shows your currently playing TIDAL track in Discord as a *Listening* activity
@@ -26,12 +34,10 @@ A lightweight Windows tray app that shows the currently playing TIDAL track as D
 - Windows 10 (19041+) or Windows 11
 - The TIDAL desktop app
 - The Discord desktop app
-- .NET 10 SDK — development only; published builds are self-contained
-
-## Installation
-
-Prebuilt binaries are not published yet. Build from source (below) and run
-`src\TidalDiscord\publish.ps1` to produce a standalone `TidalDiscord.exe`.
+- Nothing else — the download is a self-contained executable, and artwork
+  and track links are resolved by the hosted metadata service (see
+  [Privacy](#privacy)). A .NET install or TIDAL developer account is only
+  needed to build from source.
 
 ## Settings
 
